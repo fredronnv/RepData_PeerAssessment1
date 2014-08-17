@@ -1,6 +1,7 @@
 # Reproducible Research: Peer Assessment 1
 
 ## Loading and preprocessing the data
+I've opted to use fread from the library data.table to load the data. We get useful information directly from here so there's no need for further processing at this point.
 
 
 ```r
@@ -13,6 +14,7 @@ data <- fread("activity.csv", sep=",", na.strings="NA")
 For this assignment we ignore the missing values in the dataset.
 
 ### Total number of steps taken (histogram)
+Load the data into total_steps, we split by date and use the sum function to get the total per day, then use hist to get a histogram.
 
 ```r
 total_steps <- sapply(split(data$steps, data$date), sum, na.rm = TRUE)
@@ -39,13 +41,19 @@ median(total_steps)
 ## [1] 10395
 ```
 
+This gives us a mean of 9354 and a median of 10395.
+
 ## What is the average daily activity pattern?
+I split by interval and apply the mean function to get the mean of the steps taken on an interval basis over all days and store this in activity_pattern.
+
 
 ```r
 activity_pattern <- sapply(split(data$steps, data$interval), mean, na.rm = TRUE)
 ```
 
 ### Average daily activity pattern time series plot
+I've opted to use the base plot function to plot the number of steps taken.
+
 
 ```r
 plot(labels(activity_pattern), activity_pattern,
@@ -53,21 +61,22 @@ plot(labels(activity_pattern), activity_pattern,
 	type='l',
 	ylab='Number of Steps',
 	xlab='interval',
-
 )
 ```
 
 ![plot of chunk unnamed-chunk-5](figure/unnamed-chunk-5.png) 
 
 ### 5-minute intervals with most steps on average
+We can just sort the activity_pattern and use the label for it to get the 5-minute interval with most steps.
 
 ```r
-labels(last(sort(activity_pattern)))
+last(labels(sort(activity_pattern)))
 ```
 
 ```
 ## [1] "835"
 ```
+The 5-minute interval with most steps taken is "835".
 
 
 ## Imputing missing values
@@ -83,6 +92,8 @@ sum(is.na(data$steps))
 ## [1] 2304
 ```
 
+There are 2304 missing values.
+
 ### Devise a strategy for filling in all missing values in the dataset
 
 I have chosen to use the average number of steps taken in the 5-minute interval to fill in missinga values. We can use the previous activity_pattern object to access these.
@@ -93,15 +104,6 @@ I'm using a simple transform to create a new dataset with the average put in pla
 ```r
 new_dataset <- transform(data, steps = ifelse( is.na(steps), activity_pattern, steps) )
 ```
-
-### Histogram of the total number of steps taken
-
-```r
-total_steps_newdata <- sapply(split(new_dataset$steps, new_dataset$date), sum, na.rm = TRUE)
-hist(total_steps_newdata)
-```
-
-![plot of chunk unnamed-chunk-9](figure/unnamed-chunk-9.png) 
 
 ### Mean and Median
 
@@ -121,6 +123,18 @@ median(total_steps_newdata)
 ## [1] 10766
 ```
 
+Now this is interesting, the mean and median now turn out to be the same. How can this be? The fact that they differ isn't particularly conscerning, as we've added more data points and used the mean on the other points.
+
+### Histogram of the total number of steps taken
+
+```r
+total_steps_newdata <- sapply(split(new_dataset$steps, new_dataset$date), sum, na.rm = TRUE)
+hist(total_steps_newdata)
+```
+
+![plot of chunk unnamed-chunk-10](figure/unnamed-chunk-10.png) 
+
+Compared with the previous histogram this imputation does appear to possibly skew the data. The middle of the road frequency is a lot more defined compared with the frequency of days with less steps, which now appear less frequent.
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
